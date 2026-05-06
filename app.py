@@ -214,3 +214,56 @@ try:
 
 except Exception as e:
     st.error(f"Failed to load revenue trend: {e}")
+
+st.divider()
+st.subheader("Top Products by Revenue")
+
+try:
+    prod_df = get_product_revenue()
+
+    start_date = st.session_state.get("trend_start")
+    end_date   = st.session_state.get("trend_end")
+
+    if start_date is None or end_date is None:
+        st.info("Set a date range above to see product revenue.")
+    else:
+        filtered_prod = prod_df[
+            (prod_df["month_date"] >= start_date) &
+            (prod_df["month_date"] <= end_date)
+        ]
+        by_product = (
+            filtered_prod
+            .groupby("product_name")["revenue"]
+            .sum()
+            .reset_index()
+            .sort_values("revenue", ascending=False)
+        )
+
+        if by_product.empty:
+            st.info("No data in the selected date range.")
+        else:
+            chart = (
+                alt.Chart(by_product)
+                .mark_bar()
+                .encode(
+                    x=alt.X(
+                        "product_name:N",
+                        title="Product",
+                        sort=alt.EncodingSortField(field="revenue", order="descending"),
+                    ),
+                    y=alt.Y(
+                        "revenue:Q",
+                        title="Revenue ($)",
+                        axis=alt.Axis(format="$,.0f"),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("product_name:N", title="Product"),
+                        alt.Tooltip("revenue:Q", title="Revenue", format="$,.0f"),
+                    ],
+                )
+                .properties(height=300)
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Failed to load product chart: {e}")
