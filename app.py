@@ -98,6 +98,29 @@ def get_revenue_trend():
         cur.close()
 
 
+@st.cache_data(ttl=600)
+def get_product_revenue():
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(o.created_at / 1000000000)), 'YYYY-MM') AS month,
+                p.product_name,
+                SUM(o.price_usd)::FLOAT AS revenue
+            FROM basket_craft.raw.orders o
+            JOIN basket_craft.raw.products p ON o.primary_product_id = p.product_id
+            GROUP BY 1, 2
+            ORDER BY 1 ASC
+        """)
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+    df = pd.DataFrame(rows, columns=["month", "product_name", "revenue"])
+    df["month_date"] = pd.to_datetime(df["month"] + "-01").dt.date
+    return df
+
+
 try:
     m = get_kpi_metrics()
     st.subheader(f"Key Metrics — {m['label']}")
