@@ -309,3 +309,40 @@ try:
 
 except Exception as e:
     st.error(f"Failed to load product chart: {e}")
+
+st.divider()
+st.subheader("Bundle Finder")
+
+try:
+    products_df = get_products()
+    product_names = products_df["product_name"].tolist()
+    selected_name = st.selectbox("Select a product", options=product_names)
+    selected_id = int(products_df.loc[products_df["product_name"] == selected_name, "product_id"].iloc[0])
+
+    start_date = st.session_state.get("trend_start")
+    end_date   = st.session_state.get("trend_end")
+
+    if start_date is None or end_date is None:
+        st.info("Set a date range above to see bundle data.")
+    else:
+        pairs_df = get_bundle_pairs(selected_id)
+        filtered = pairs_df[
+            (pairs_df["month_date"] >= start_date) &
+            (pairs_df["month_date"] <= end_date)
+        ]
+        by_product = (
+            filtered
+            .groupby("co_product")["order_count"]
+            .sum()
+            .reset_index()
+            .sort_values("order_count", ascending=False)
+        )
+        by_product.columns = ["Product", "Orders Together"]
+
+        if by_product.empty:
+            st.info("No bundle data in the selected date range.")
+        else:
+            st.dataframe(by_product, hide_index=True, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Failed to load bundle finder: {e}")
