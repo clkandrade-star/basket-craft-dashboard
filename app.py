@@ -137,6 +137,32 @@ def get_products():
     return pd.DataFrame(rows, columns=["product_id", "product_name"])
 
 
+@st.cache_data(ttl=600)
+def get_bundle_pairs(product_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT
+                TO_CHAR(DATE_TRUNC('month', TO_TIMESTAMP(oi_a.created_at / 1000000000)), 'YYYY-MM') AS month,
+                p.product_name AS co_product,
+                COUNT(DISTINCT oi_a.order_id)::INT AS order_count
+            FROM basket_craft.raw.order_items oi_a
+            JOIN basket_craft.raw.order_items oi_b
+              ON oi_a.order_id = oi_b.order_id AND oi_b.product_id != oi_a.product_id
+            JOIN basket_craft.raw.products p ON oi_b.product_id = p.product_id
+            WHERE oi_a.product_id = %s
+            GROUP BY 1, 2
+            ORDER BY 1 ASC
+        """, (product_id,))
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+    df = pd.DataFrame(rows, columns=["month", "co_product", "order_count"])
+    df["month_date"] = pd.to_datetime(df["month"] + "-01").dt.date
+    return df
+
+
 try:
     m = get_kpi_metrics()
     st.subheader(f"Key Metrics — {m['label']}")
