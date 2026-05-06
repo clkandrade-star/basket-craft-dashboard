@@ -153,7 +153,7 @@ def get_bundle_pairs(product_id):
             JOIN basket_craft.raw.products p ON oi_b.product_id = p.product_id
             WHERE oi_a.product_id = %s
             GROUP BY 1, 2
-            ORDER BY 1 ASC
+            ORDER BY 1 ASC, 3 DESC
         """, (product_id,))
         rows = cur.fetchall()
     finally:
