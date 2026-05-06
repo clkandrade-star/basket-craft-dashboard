@@ -120,8 +120,8 @@ try:
     min_date = trend_df["month_date"].min()
     max_date = trend_df["month_date"].max()
     max_ts   = pd.Timestamp(max_date)
-    last_6m_start  = (max_ts - pd.DateOffset(months=5)).date()
-    last_12m_start = (max_ts - pd.DateOffset(months=11)).date()
+    last_6m_start  = (max_ts - pd.DateOffset(months=5)).date()   # 6 months inclusive: max - 5
+    last_12m_start = (max_ts - pd.DateOffset(months=11)).date()  # 12 months inclusive: max - 11
 
     if "trend_preset" not in st.session_state:
         st.session_state.trend_preset = "Last 12M"
