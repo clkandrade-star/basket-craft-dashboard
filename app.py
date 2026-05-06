@@ -157,5 +157,34 @@ try:
         "End", key="trend_end", min_value=min_date, max_value=max_date
     )
 
+    filtered = trend_df[
+        (trend_df["month_date"] >= start_date) &
+        (trend_df["month_date"] <= end_date)
+    ].copy()
+    filtered["month_dt"] = pd.to_datetime(filtered["month"] + "-01")
+
+    chart = (
+        alt.Chart(filtered)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(
+                "month_dt:T",
+                title="Month",
+                axis=alt.Axis(format="%b %Y", labelAngle=-45),
+            ),
+            y=alt.Y(
+                "revenue:Q",
+                title="Revenue ($)",
+                axis=alt.Axis(format="$,.0f"),
+            ),
+            tooltip=[
+                alt.Tooltip("month_dt:T", title="Month", format="%b %Y"),
+                alt.Tooltip("revenue:Q", title="Revenue", format="$,.0f"),
+            ],
+        )
+        .properties(height=350)
+    )
+    st.altair_chart(chart, use_container_width=True)
+
 except Exception as e:
     st.error(f"Failed to load revenue trend: {e}")
