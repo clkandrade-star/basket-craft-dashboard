@@ -142,5 +142,20 @@ try:
             st.session_state.trend_start = min_date
             st.session_state.trend_end   = max_date
 
+    f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
+    f_col1.radio(
+        "Date range",
+        ["Last 6M", "Last 12M", "All Time"],
+        key="trend_preset",
+        on_change=_apply_preset,
+        horizontal=True,
+    )
+    start_date = f_col2.date_input(
+        "Start", key="trend_start", min_value=min_date, max_value=max_date
+    )
+    end_date = f_col3.date_input(
+        "End", key="trend_end", min_value=min_date, max_value=max_date
+    )
+
 except Exception as e:
     st.error(f"Failed to load revenue trend: {e}")
