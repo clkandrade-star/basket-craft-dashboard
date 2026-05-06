@@ -121,6 +121,22 @@ def get_product_revenue():
     return df
 
 
+@st.cache_data(ttl=600)
+def get_products():
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("""
+            SELECT product_id, product_name
+            FROM basket_craft.raw.products
+            ORDER BY product_name ASC
+        """)
+        rows = cur.fetchall()
+    finally:
+        cur.close()
+    return pd.DataFrame(rows, columns=["product_id", "product_name"])
+
+
 try:
     m = get_kpi_metrics()
     st.subheader(f"Key Metrics — {m['label']}")
