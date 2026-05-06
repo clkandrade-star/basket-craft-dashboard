@@ -114,12 +114,21 @@ st.subheader("Monthly Revenue")
 
 try:
     trend_df = get_revenue_trend()
+    if trend_df.empty:
+        raise ValueError("Revenue trend query returned no rows")
 
     min_date = trend_df["month_date"].min()
     max_date = trend_df["month_date"].max()
     max_ts   = pd.Timestamp(max_date)
     last_6m_start  = (max_ts - pd.DateOffset(months=5)).date()
     last_12m_start = (max_ts - pd.DateOffset(months=11)).date()
+
+    if "trend_preset" not in st.session_state:
+        st.session_state.trend_preset = "Last 12M"
+    if "trend_start" not in st.session_state:
+        st.session_state.trend_start = last_12m_start
+    if "trend_end" not in st.session_state:
+        st.session_state.trend_end = max_date
 
     def _apply_preset():
         p = st.session_state.trend_preset
@@ -132,13 +141,6 @@ try:
         else:
             st.session_state.trend_start = min_date
             st.session_state.trend_end   = max_date
-
-    if "trend_preset" not in st.session_state:
-        st.session_state.trend_preset = "Last 12M"
-    if "trend_start" not in st.session_state:
-        st.session_state.trend_start = last_12m_start
-    if "trend_end" not in st.session_state:
-        st.session_state.trend_end = max_date
 
 except Exception as e:
     st.error(f"Failed to load revenue trend: {e}")
